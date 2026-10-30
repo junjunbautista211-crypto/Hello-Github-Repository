@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BorrowBuddy | School Equipment Borrowing</title>
+<style>
+:root{--navy:#142b4a;--blue:#2563eb;--pale:#eff6ff;--ink:#172033;--muted:#64748b;--line:#e2e8f0;--bg:#f5f7fb;--white:#fff;--green:#15803d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
+header{background:var(--navy);color:white;padding:16px max(20px,calc((100% - 1050px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-size:22px;font-weight:800;letter-spacing:-.5px}.brand span{color:#93c5fd}.sub{font-size:12px;color:#cbd5e1;margin-top:3px}
+.wrap{max-width:1050px;margin:25px auto;padding:0 18px}.welcome{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+h1{font-size:27px;margin:0 0 6px}p{line-height:1.5}.muted{color:var(--muted)}.small{font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin:18px 0}.card{background:white;border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:0 3px 12px #0f172a08}
+.stat-label{color:var(--muted);font-size:13px}.stat-num{font-size:29px;font-weight:800;margin-top:7px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.tab{border:1px solid var(--line);background:white;color:var(--ink);border-radius:9px;padding:10px 15px;cursor:pointer;font-weight:700}.tab.active,.btn{background:var(--blue);color:white;border-color:var(--blue)}
+.btn{border:0;border-radius:9px;padding:11px 15px;font-weight:700;cursor:pointer}.btn:disabled{opacity:.5;cursor:not-allowed}.outline{background:white;color:var(--blue);border:1px solid #bfdbfe}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:14px}.item{display:flex;flex-direction:column;gap:12px}.item-top{display:flex;gap:12px;align-items:center}.emoji{font-size:30px;background:var(--pale);border-radius:12px;padding:12px}.item h3{margin:0 0 4px;font-size:17px}.pill{display:inline-block;border-radius:30px;background:#dcfce7;color:var(--green);padding:5px 9px;font-size:11px;font-weight:700}.pill.pending{background:#fef3c7;color:#92400e}.pill.returned{background:#e2e8f0;color:#475569}
+input,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;font:inherit;background:white;margin:6px 0 12px}
+label{font-size:13px;font-weight:700}.row{display:flex;gap:12px}.row>*{flex:1}.hidden{display:none!important}
+.loan{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.loan h3{margin:0 0 5px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:28px}
+.modal{position:fixed;inset:0;background:#0f172acc;display:grid;place-items:center;padding:18px;z-index:5}.modal-box{background:white;border-radius:16px;padding:22px;width:min(100%,420px)}
+.notice{padding:12px;border-radius:9px;background:var(--pale);color:#1e40af;font-size:13px;margin:12px 0}
+@media(max-width:600px){.stats{gap:8px}.card{padding:13px}.stat-num{font-size:24px}h1{font-size:23px}.row{display:block}}
+</style>
+</head>
+<body>
+<header><div><div class="brand">♧ Borrow<span>Buddy</span></div><div class="sub">SCHOOL EQUIPMENT BORROWING SYSTEM</div></div><div class="small">Student Portal</div></header>
+<main class="wrap">
+<section class="welcome"><div><h1>Welcome to BorrowBuddy 👋</h1><div class="muted">Borrow what you need. Return it responsibly.</div></div><button class="btn" onclick="showTab('browse')">＋ Borrow an item</button></section>
+<section class="stats">
+ <div class="card"><div class="stat-label">Available items</div><div class="stat-num" id="availableCount">3</div></div>
+ <div class="card"><div class="stat-label">My active requests</div><div class="stat-num" id="loanCount">0</div></div>
+ <div class="card"><div class="stat-label">Items returned</div><div class="stat-num" id="returnedCount">0</div></div>
+</section>
+<nav class="tabs">
+ <button class="tab active" data-tab="home" onclick="showTab('home')">⌂ Home</button>
+ <button class="tab" data-tab="browse" onclick="showTab('browse')">⌕ Browse items</button>
+ <button class="tab" data-tab="loans" onclick="showTab('loans')">▤ My borrowings</button>
+ <button class="tab" data-tab="profile" onclick="showTab('profile')">♙ Profile</button>
+</nav>
+<section id="home">
+ <div class="card"><h2>How BorrowBuddy works</h2><p class="muted">1. Browse available school equipment. 2. Submit a borrowing request and return date. 3. Wait for the school administrator's approval. 4. Return the item on time.</p><div class="notice">Demo prototype: requests are saved only in this browser and are not sent to a real school administrator.</div></div>
+ <h2>Featured equipment</h2><div class="grid" id="featured"></div>
+</section>
+<section id="browse" class="hidden">
+ <h2>Browse equipment</h2><p class="muted">Search the sample school inventory and request an item.</p>
+ <input id="search" placeholder="Search by item name or code..." oninput="renderItems()">
+ <div class="grid" id="inventory"></div>
+</section>
+<section id="loans" class="hidden">
+ <h2>My borrowings</h2><p class="muted">Review your requests and mark an item as returned in this demo.</p><div id="loanList"></div>
+</section>
+<section id="profile" class="hidden">
+ <h2>Student profile</h2><div class="card" style="max-width:520px">
+ <label>Full name</label><input id="studentName" value="Student User" placeholder="Enter your name">
+ <label>Student ID</label><input id="studentId" placeholder="Enter your student ID">
+ <label>Email address</label><input id="studentEmail" type="email" placeholder="Enter your school email">
+ <button class="btn" onclick="saveProfile()">Save profile</button><p class="small muted" id="profileMessage"></p>
+ </div>
+</section>
+</main>
+<footer>BorrowBuddy • School Equipment Borrowing System • Student prototype</footer>
+<div class="modal hidden" id="borrowModal"><div class="modal-box">
+ <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">Borrow request</h2><button class="tab" onclick="closeModal()">✕</button></div>
+ <p id="selectedItem" class="muted"></p><label for="returnDate">Expected return date</label><input type="date" id="returnDate">
+ <div class="notice">Your request will be marked as pending approval in this prototype.</div>
+ <button class="btn" style="width:100%" onclick="submitRequest()">Submit request</button>
+</div></div>
+<script>
+const items=[
+ {id:"BB-001",name:"Laptop",icon:"💻",desc:"For research, assignments and classroom activities."},
+ {id:"BB-002",name:"Projector",icon:"📽️",desc:"For classroom presentations and group reports."},
+ {id:"BB-003",name:"Portable Speaker",icon:"🔊",desc:"For school events and learning activities."},
+ {id:"BB-004",name:"科学 Calculator",icon:"🧮",desc:"For mathematics and science activities."},
+ {id:"BB-005",name:"Microphone",icon:"🎤",desc:"For presentations, programs and events."},
+ {id:"BB-006",name:"Extension Cord",icon:"🔌",desc:"For approved classroom equipment use."}
+];
+let requests=JSON.parse(localStorage.getItem("bbRequests")||"[]"),selected=null;
+function save(){localStorage.setItem("bbRequests",JSON.stringify(requests))}
+function busy(id){return requests.some(r=>r.id===id&&r.status!=="Returned")}
+function showTab(tab){document.querySelectorAll("main section[id]").forEach(s=>s.classList.toggle("hidden",s.id!==tab));document.querySelectorAll(".tab[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));render()}
+function itemCard(i){let unavailable=busy(i.id);return `<article class="card item"><div class="item-top"><div class="emoji">${i.icon}</div><div><h3>${i.name}</h3><div class="muted small">${i.id}</div></div></div><p class="muted small">${i.desc}</p><div><span class="pill ${unavailable?'pending':''}">${unavailable?'Requested':'Available'}</span></div><button class="btn ${unavailable?'outline':''}" ${unavailable?'disabled':''} onclick="openBorrow('${i.id}')">${unavailable?'Not available':'Request to borrow'}</button></article>`}
+function renderItems(){let q=(document.getElementById("search")?.value||"").toLowerCase();let list=items.filter(i=>(i.name+" "+i.id).toLowerCase().includes(q));document.getElementById("inventory").innerHTML=list.map(itemCard).join("")||"<p>No items found.</p>"}
+function render(){document.getElementById("availableCount").textContent=items.filter(i=>!busy(i.id)).length;document.getElementById("loanCount").textContent=requests.filter(r=>r.status!=="Returned").length;document.getElementById("returnedCount").textContent=requests.filter(r=>r.status==="Returned").length;document.getElementById("featured").innerHTML=items.slice(0,3).map(itemCard).join("");renderItems();document.getElementById("loanList").innerHTML=requests.length?requests.map((r,n)=>`<div class="card loan" style="margin-bottom:12px"><div><h3>${r.icon} ${r.name}</h3><div class="muted small">${r.id} · Return by ${r.date}</div><p><span class="pill ${r.status==='Returned'?'returned':'pending'}">${r.status}</span></p></div>${r.status!=="Returned"?`<button class="btn outline" onclick="returnItem(${n})">Mark returned</button>`:""}</div>`).join(""):'<div class="card muted">You have no borrowing requests yet. Browse equipment to get started.</div>'}
+function openBorrow(id){selected=items.find(i=>i.id===id);document.getElementById("selectedItem").textContent=selected.icon+" "+selected.name+" ("+selected.id+")";let d=new Date();d.setDate(d.getDate()+7);let date=d.toISOString().slice(0,10);let input=document.getElementById("returnDate");input.min=new Date().toISOString().slice(0,10);input.value=date;document.getElementById("borrowModal").classList.remove("hidden")}
+function closeModal(){document.getElementById("borrowModal").classList.add("hidden")}
+function submitRequest(){let date=document.getElementById("returnDate").value;if(!date||date<document.getElementById("returnDate").min){alert("Please select a valid return date.");return}if(busy(selected.id)){alert("This item already has an active request.");return}requests.push({...selected,date,status:"Pending approval"});save();closeModal();render();showTab("loans");alert("Your demo borrowing request has been submitted!")}
+function returnItem(n){if(confirm("Mark this item as returned?")){requests[n].status="Returned";save();render()}}
+function saveProfile(){let name=document.getElementById("studentName").value.trim();if(!name){alert("Please enter your name.");return}localStorage.setItem("bbProfile",JSON.stringify({name,id:document.getElementById("studentId").value,email:document.getElementById("studentEmail").value}));document.getElementById("profileMessage").textContent="Profile saved on this browser."}
+(function(){let p=JSON.parse(localStorage.getItem("bbProfile")||"null");if(p){studentName.value=p.name;studentId.value=p.id;studentEmail.value=p.email}render()})();
+</script>
+</body>
+</html>
