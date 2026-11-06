@@ -5,585 +5,1261 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BorrowBuddy - Digital Borrowing System</title>
+
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;background:#f4f7fc;color:#172b4d}
-header{background:#142b4a;color:white;padding:22px;text-align:center}
-header h1{font-size:28px}
-header p{font-size:13px;color:#cbd5e1;margin-top:5px}
-.container{max-width:1100px;margin:25px auto;padding:15px}
-.welcome{background:#dbeafe;padding:25px;border-radius:15px;margin-bottom:20px}
-.welcome h2{margin-bottom:8px}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
-.stat-card,.panel,.item-card,.loan-card{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:18px}
-.stat-card h3{font-size:13px;color:#64748b}
-.stat-card p{font-size:27px;font-weight:bold;margin-top:8px}
-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:25px}
-nav button{background:white;border:1px solid #dbe3ef;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;color:#172b4d}
-nav button.active,nav button:hover{background:#2563eb;color:white}
-.section{display:none}
-.section.active{display:block}
-h2{margin-bottom:14px}
-.items{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;margin-top:15px}
-.item-card{box-shadow:0 3px 10px #00000008}
-.item-icon{font-size:40px;margin-bottom:12px}
-.item-card h3{margin-bottom:8px}
-.item-card p{font-size:13px;color:#64748b;margin-bottom:12px;line-height:1.5}
-.available,.pending,.returned{display:inline-block;padding:5px 10px;border-radius:20px;font-size:12px;margin-bottom:10px}
-.available{background:#dcfce7;color:#15803d}
-.pending{background:#fef3c7;color:#92400e}
-.returned{background:#e2e8f0;color:#475569}
-.btn{background:#2563eb;color:white;padding:11px 15px;border:0;border-radius:8px;cursor:pointer;font-weight:bold;margin-top:8px}
-.btn:hover{background:#1d4ed8}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn.secondary{background:#64748b}
-.btn.green{background:#15803d}
-.btn.red{background:#b91c1c}
-.full{width:100%}
-input,select,textarea{width:100%;padding:12px;margin:7px 0 15px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;background:white;color:#172b4d}
-textarea{min-height:85px;resize:vertical}
-label{font-size:13px;font-weight:bold}
-.panel{margin-bottom:15px}
-.loan-card{margin-bottom:12px}
-.loan-card h3{margin-bottom:8px}
-.loan-card p{font-size:13px;color:#64748b;margin:7px 0}
-.small{font-size:13px;color:#64748b;line-height:1.5}
-.hidden{display:none!important}
-.notice{padding:13px;border-radius:9px;background:#eff6ff;color:#1e40af;font-size:13px;margin:12px 0;line-height:1.5}
-.success{background:#dcfce7;color:#166534}
-.warning{background:#fef3c7;color:#92400e}
-.log-entry{border-left:4px solid #2563eb}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:left;padding:11px;border-bottom:1px solid #e2e8f0}
-th{background:#eff6ff}
-footer{text-align:center;padding:25px;color:#64748b;font-size:12px}
-@media(max-width:700px){
-.stats{grid-template-columns:repeat(2,1fr)}
-nav button{flex:1 1 40%}
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f7fc;
+    color: #172b4d;
+}
+
+header {
+    background: #142b4a;
+    color: white;
+    padding: 22px;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 28px;
+}
+
+header p {
+    font-size: 13px;
+    color: #cbd5e1;
+    margin-top: 5px;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 25px auto;
+    padding: 15px;
+}
+
+.welcome {
+    background: #dbeafe;
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+
+.welcome h2 {
+    margin-bottom: 8px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.stat-card, .panel, .item-card, .loan-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px;
+}
+
+.stat-card h3 {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.stat-card p {
+    font-size: 27px;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 25px;
+}
+
+nav button {
+    background: white;
+    border: 1px solid #dbe3ef;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #172b4d;
+}
+
+nav button.active,
+nav button:hover {
+    background: #2563eb;
+    color: white;
+}
+
+.section {
+    display: none;
+}
+
+.section.active {
+    display: block;
+}
+
+h2 {
+    margin-bottom: 14px;
+}
+
+.items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.item-card {
+    box-shadow: 0 3px 10px #00000008;
+}
+
+.item-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+}
+
+.item-card h3 {
+    margin-bottom: 8px;
+}
+
+.item-card p {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.available, .pending, .returned, .approved, .rejected {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.available, .approved {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.returned {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.rejected {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.btn {
+    background: #2563eb;
+    color: white;
+    padding: 11px 15px;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.btn:hover {
+    opacity: .9;
+}
+
+.btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.btn.green {
+    background: #15803d;
+}
+
+.btn.red {
+    background: #b91c1c;
+}
+
+.btn.secondary {
+    background: #64748b;
+}
+
+.full {
+    width: 100%;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    margin: 7px 0 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font: inherit;
+    background: white;
+    color: #172b4d;
+}
+
+textarea {
+    min-height: 85px;
+    resize: vertical;
+}
+
+label {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.panel {
+    margin-bottom: 15px;
+}
+
+.loan-card {
+    margin-bottom: 12px;
+}
+
+.loan-card h3 {
+    margin-bottom: 8px;
+}
+
+.loan-card p {
+    font-size: 13px;
+    color: #64748b;
+    margin: 7px 0;
+}
+
+.small {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.notice {
+    padding: 13px;
+    border-radius: 9px;
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: 13px;
+    margin: 12px 0;
+    line-height: 1.5;
+}
+
+.warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.log-entry {
+    border-left: 4px solid #2563eb;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #64748b;
+    font-size: 12px;
+}
+
+@media(max-width:700px) {
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    nav button {
+        flex: 1 1 40%;
+    }
 }
 </style>
 </head>
+
 <body>
 
 <header>
-<h1>📚 BorrowBuddy</h1>
-<p>Borrow • Learn • Grow</p>
-<p>School Equipment Borrowing System</p>
+    <h1>📚 BorrowBuddy</h1>
+    <p>Borrow • Learn • Grow</p>
+    <p>School Equipment Borrowing System</p>
 </header>
 
 <div class="container">
 
-<div class="welcome">
-<h2>Hello, Student! 👋</h2>
-<p>Welcome to BorrowBuddy. Complete your digital logbook before borrowing school equipment.</p>
-</div>
+    <div class="welcome">
+        <h2>Hello, Student! 👋</h2>
+        <p>Welcome to BorrowBuddy. Complete your digital logbook before borrowing school equipment.</p>
+    </div>
 
-<div class="stats">
-<div class="stat-card"><h3>Available Items</h3><p id="availableCount">6</p></div>
-<div class="stat-card"><h3>Active Borrowings</h3><p id="loanCount">0</p></div>
-<div class="stat-card"><h3>Returned Items</h3><p id="returnedCount">0</p></div>
-<div class="stat-card"><h3>Logbook Entries</h3><p id="logCount">0</p></div>
-</div>
+    <!-- DASHBOARD STATISTICS -->
 
-<nav>
-<button class="active" onclick="showSection('home',this)">🏠 Home</button>
-<button onclick="showSection('browse',this)">🔍 Browse Items</button>
-<button onclick="showSection('logbook',this)">📖 Digital Logbook</button>
-<button onclick="showSection('borrowings',this)">📋 My Borrowings</button>
-<button onclick="showSection('history',this)">📜 History</button>
-<button onclick="showSection('profile',this)">👤 Profile</button>
-</nav>
+    <div class="stats">
+        <div class="stat-card">
+            <h3>Available Items</h3>
+            <p id="availableCount">0</p>
+        </div>
 
-<!-- HOME -->
-<section id="home" class="section active">
-<div class="panel">
-<h2>Welcome to BorrowBuddy!</h2>
-<p class="small">Borrow school materials easily and responsibly. Every student must register their borrowing transaction in the digital logbook before submitting a request.</p>
-<div class="notice warning">Important: No completed logbook entry means no borrowing request.</div>
-<button class="btn" onclick="showSection('logbook',document.querySelector('[onclick*=logbook]'))">Complete Digital Logbook</button>
-</div>
+        <div class="stat-card">
+            <h3>Active Borrowings</h3>
+            <p id="loanCount">0</p>
+        </div>
 
-<h2>Available Equipment</h2>
-<div class="items" id="homeItems"></div>
-</section>
+        <div class="stat-card">
+            <h3>Returned Items</h3>
+            <p id="returnedCount">0</p>
+        </div>
 
-<!-- BROWSE -->
-<section id="browse" class="section">
-<h2>Browse Equipment</h2>
-<p class="small">Find the school materials you need.</p>
-<input id="search" placeholder="Search books, projector, speaker..." oninput="renderItems()">
-<div class="items" id="inventory"></div>
-</section>
+        <div class="stat-card">
+            <h3>Logbook Entries</h3>
+            <p id="logCount">0</p>
+        </div>
+    </div>
 
-<!-- DIGITAL LOGBOOK -->
-<section id="logbook" class="section">
-<h2>📖 Digital Borrowing Logbook</h2>
-<p class="small">Complete this form before submitting your borrowing request.</p>
+    <!-- NAVIGATION -->
 
-<div class="notice">
-<strong>Required step:</strong> Your borrowing request cannot proceed without a completed logbook entry.
-</div>
+    <nav>
+        <button class="active" onclick="showSection('home',this)">🏠 Home</button>
+        <button onclick="showSection('browse',this)">🔍 Browse Items</button>
+        <button onclick="showSection('logbook',this)">📖 Digital Logbook</button>
+        <button onclick="showSection('borrowings',this)">📋 My Borrowings</button>
+        <button onclick="showSection('history',this)">📜 History</button>
+        <button onclick="showSection('profile',this)">👤 Profile</button>
+        <button onclick="showSection('admin',this)">⚙️ Admin</button>
+    </nav>
 
-<div class="panel">
-<form id="logForm">
-<label>Student Full Name</label>
-<input id="logName" required placeholder="Enter your full name">
+    <!-- HOME -->
 
-<label>Student ID Number</label>
-<input id="logId" required placeholder="Enter your student ID">
+    <section id="home" class="section active">
 
-<label>Course / Section</label>
-<input id="logSection" required placeholder="Enter your course or section">
+        <div class="panel">
+            <h2>Welcome to BorrowBuddy!</h2>
 
-<label>Equipment to Borrow</label>
-<select id="logEquipment" required>
-<option value="">Select equipment</option>
-<option>Books</option>
-<option>Projector</option>
-<option>Speaker</option>
-<option>Calculator</option>
-<option>Microphone</option>
-<option>Extension Cord</option>
-</select>
+            <p class="small">
+                Borrow school materials easily and responsibly.
+                Every student must register their borrowing transaction
+                in the digital logbook before submitting a request.
+            </p>
 
-<label>Purpose of Borrowing</label>
-<textarea id="logPurpose" required placeholder="Explain why you need this equipment"></textarea>
+            <div class="notice warning">
+                Important: No completed logbook entry means no borrowing request.
+            </div>
 
-<label>Expected Return Date</label>
-<input type="date" id="logReturn" required>
+            <button class="btn" onclick="goTo('logbook',2)">
+                Complete Digital Logbook
+            </button>
+        </div>
 
-<button class="btn full" type="submit">Save Logbook Entry</button>
-</form>
-</div>
+        <h2>Available Equipment</h2>
+        <div class="items" id="homeItems"></div>
 
-<h2>My Logbook Records</h2>
-<div id="myLogbook"></div>
-</section>
+    </section>
 
-<!-- BORROWINGS -->
-<section id="borrowings" class="section">
-<h2>📋 My Borrowings</h2>
-<p class="small">Your borrowing requests and return schedules.</p>
-<div id="loanList"></div>
-</section>
+    <!-- BROWSE EQUIPMENT -->
 
-<!-- HISTORY -->
-<section id="history" class="section">
-<h2>📜 Transaction History</h2>
-<p class="small">Review your borrowing and return records.</p>
-<div id="historyList"></div>
-</section>
+    <section id="browse" class="section">
 
-<!-- PROFILE -->
-<section id="profile" class="section">
-<h2>👤 Student Profile</h2>
-<div class="panel">
-<label>Full Name</label>
-<input id="studentName" placeholder="Enter your name">
+        <h2>Browse Equipment</h2>
 
-<label>Student ID</label>
-<input id="studentId" placeholder="Enter student ID">
+        <p class="small">
+            Find the school materials you need.
+        </p>
 
-<label>Course / Section</label>
-<input id="studentSection" placeholder="Enter course or section">
+        <input
+            id="search"
+            placeholder="Search books, projector, speaker..."
+            oninput="renderItems()"
+        >
 
-<label>Email Address</label>
-<input id="studentEmail" type="email" placeholder="Enter email">
+        <div class="items" id="inventory"></div>
 
-<button class="btn full" onclick="saveProfile()">Save Profile</button>
-<p id="profileMessage" class="small"></p>
-</div>
-</section>
+    </section>
+
+    <!-- DIGITAL LOGBOOK -->
+
+    <section id="logbook" class="section">
+
+        <h2>📖 Digital Borrowing Logbook</h2>
+
+        <p class="small">
+            Complete this form before submitting your borrowing request.
+        </p>
+
+        <div class="notice">
+            <strong>Required step:</strong>
+            Your borrowing request cannot proceed without a completed logbook entry.
+        </div>
+
+        <div class="panel">
+
+            <form id="logForm">
+
+                <label>Student Full Name</label>
+                <input id="logName" required placeholder="Enter your full name">
+
+                <label>Student ID Number</label>
+                <input id="logId" required placeholder="Enter your student ID">
+
+                <label>Course / Section</label>
+                <input id="logSection" required placeholder="Enter your course or section">
+
+                <label>Equipment to Borrow</label>
+
+                <select id="logEquipment" required>
+                    <option value="">Select equipment</option>
+                    <option>Books</option>
+                    <option>Projector</option>
+                    <option>Speaker</option>
+                    <option>Calculator</option>
+                    <option>Microphone</option>
+                    <option>Extension Cord</option>
+                    <option>Foot Mop</option>
+                </select>
+
+                <label>Purpose of Borrowing</label>
+                <textarea id="logPurpose" required placeholder="Explain why you need this equipment"></textarea>
+
+                <label>Expected Return Date</label>
+                <input type="date" id="logReturn" required>
+
+                <button class="btn full" type="submit">
+                    Save Logbook Entry
+                </button>
+
+            </form>
+
+        </div>
+
+        <h2>My Logbook Records</h2>
+        <div id="myLogbook"></div>
+
+    </section>
+
+    <!-- BORROWINGS -->
+
+    <section id="borrowings" class="section">
+
+        <h2>📋 My Borrowings</h2>
+
+        <p class="small">
+            Your borrowing requests and return schedules.
+        </p>
+
+        <div id="loanList"></div>
+
+    </section>
+
+    <!-- HISTORY -->
+
+    <section id="history" class="section">
+
+        <h2>📜 Transaction History</h2>
+
+        <p class="small">
+            Review your borrowing and return records.
+        </p>
+
+        <div id="historyList"></div>
+
+    </section>
+
+    <!-- PROFILE -->
+
+    <section id="profile" class="section">
+
+        <h2>👤 Student Profile</h2>
+
+        <div class="panel">
+
+            <label>Full Name</label>
+            <input id="studentName" placeholder="Enter your name">
+
+            <label>Student ID</label>
+            <input id="studentId" placeholder="Enter student ID">
+
+            <label>Course / Section</label>
+            <input id="studentSection" placeholder="Enter course or section">
+
+            <label>Email Address</label>
+            <input id="studentEmail" type="email" placeholder="Enter email">
+
+            <button class="btn full" onclick="saveProfile()">
+                Save Profile
+            </button>
+
+            <p id="profileMessage" class="small"></p>
+
+        </div>
+
+    </section>
+
+    <!-- ADMIN DASHBOARD -->
+
+    <section id="admin" class="section">
+
+        <h2>⚙️ Administrator Dashboard</h2>
+
+        <div class="notice warning">
+            Prototype administrator controls.
+            In a real system, this page must be protected by administrator login.
+        </div>
+
+        <h3>Pending Borrowing Requests</h3>
+        <div id="adminList"></div>
+
+    </section>
 
 </div>
 
 <footer>
-BorrowBuddy © 2026 | School Equipment Borrowing System
+    BorrowBuddy © 2026 | School Equipment Borrowing System
 </footer>
 
 <script>
 
+// =====================================
 // EQUIPMENT INVENTORY
+// =====================================
 
-const items=[
-{id:"BB-001",name:"Books",icon:"📚",description:"Textbooks and reference books for school study."},
-{id:"BB-002",name:"Projector",icon:"📽️",description:"For classroom presentations and group reports."},
-{id:"BB-003",name:"Speaker",icon:"🔊",description:"Portable speaker for school events."},
-{id:"BB-004",name:"Calculator",icon:"🧮",description:"For mathematics and science activities."},
-{id:"BB-005",name:"Microphone",icon:"🎤",description:"For presentations and school programs."},
-{id:"BB-006",name:"Extension Cord",icon:"🔌",description:"For approved classroom equipment use."},
-{id:"BB-007",name:"Foot Mop",icon:"🧹",description:"For cleaning activities."}
+const items = [
+    {
+        id: "BB-001",
+        name: "Books",
+        icon: "📚",
+        description: "Textbooks and reference books for school study."
+    },
+    {
+        id: "BB-002",
+        name: "Projector",
+        icon: "📽️",
+        description: "For classroom presentations and group reports."
+    },
+    {
+        id: "BB-003",
+        name: "Speaker",
+        icon: "🔊",
+        description: "Portable speaker for school events."
+    },
+    {
+        id: "BB-004",
+        name: "Calculator",
+        icon: "🧮",
+        description: "For mathematics and science activities."
+    },
+    {
+        id: "BB-005",
+        name: "Microphone",
+        icon: "🎤",
+        description: "For presentations and school programs."
+    },
+    {
+        id: "BB-006",
+        name: "Extension Cord",
+        icon: "🔌",
+        description: "For approved classroom equipment use."
+    },
+    {
+        id: "BB-007",
+        name: "Foot Mop",
+        icon: "🧹",
+        description: "For cleaning activities."
+    }
 ];
 
+// =====================================
 // DATA STORAGE
+// =====================================
 
-let logs=JSON.parse(localStorage.getItem("bbLogs")||"[]");
-let requests=JSON.parse(localStorage.getItem("bbRequests")||"[]");
-let transactions=JSON.parse(localStorage.getItem("bbTransactions")||"[]");
-
-let selectedItem=null;
-let selectedLog=null;
-
-function saveData(){
-localStorage.setItem("bbLogs",JSON.stringify(logs));
-localStorage.setItem("bbRequests",JSON.stringify(requests));
-localStorage.setItem("bbTransactions",JSON.stringify(transactions));
+function readStorage(key, fallback) {
+    try {
+        const value = JSON.parse(localStorage.getItem(key));
+        return value === null ? fallback : value;
+    } catch (error) {
+        return fallback;
+    }
 }
 
-function timestamp(){
-return new Date().toLocaleString();
+let logs = readStorage("bbLogs", []);
+let requests = readStorage("bbRequests", []);
+let transactions = readStorage("bbTransactions", []);
+
+let selectedItem = null;
+
+// =====================================
+// SAVE DATA
+// =====================================
+
+function saveData() {
+    localStorage.setItem("bbLogs", JSON.stringify(logs));
+    localStorage.setItem("bbRequests", JSON.stringify(requests));
+    localStorage.setItem("bbTransactions", JSON.stringify(transactions));
 }
 
-function isBorrowed(id){
-return requests.some(r=>r.itemId===id&&r.status!=="Returned");
+function timestamp() {
+    return new Date().toLocaleString();
 }
 
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, function(c) {
+        return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        }[c];
+    });
+}
+
+function isBorrowed(id) {
+    return requests.some(r =>
+        r.itemId === id &&
+        (r.status === "Pending approval" || r.status === "Approved")
+    );
+}
+
+function localDate() {
+    const d = new Date();
+    const offset = d.getTimezoneOffset();
+    return new Date(d.getTime() - offset * 60000)
+        .toISOString().split("T")[0];
+}
+
+// =====================================
 // NAVIGATION
+// =====================================
 
-function showSection(id,button){
-document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-document.getElementById(id).classList.add("active");
+function showSection(id, button) {
 
-document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
-if(button)button.classList.add("active");
+    document.querySelectorAll(".section").forEach(section => {
+        section.classList.remove("active");
+    });
 
-render();
+    document.getElementById(id).classList.add("active");
+
+    document.querySelectorAll("nav button").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    if (button) {
+        button.classList.add("active");
+    }
+
+    render();
 }
 
+function goTo(id, index) {
+    showSection(id, document.querySelectorAll("nav button")[index]);
+}
+
+// =====================================
 // ITEM CARDS
+// =====================================
 
-function createCard(item){
-let busy=isBorrowed(item.id);
+function createCard(item) {
 
-return `
-<div class="item-card">
-<div class="item-icon">${item.icon}</div>
-<h3>${item.name}</h3>
-<p>Item Code: ${item.id}</p>
-<p>${item.description}</p>
-<span class="${busy?'pending':'available'}">
-${busy?'Currently Borrowed':'Available'}
-</span>
-<button class="btn full" ${busy?'disabled':''}
-onclick="startBorrow('${item.id}')">
-${busy?'Unavailable':'Borrow Now'}
-</button>
-</div>`;
+    const busy = isBorrowed(item.id);
+
+    return `
+        <div class="item-card">
+
+            <div class="item-icon">${item.icon}</div>
+
+            <h3>${escapeHTML(item.name)}</h3>
+
+            <p>Item Code: ${escapeHTML(item.id)}</p>
+
+            <p>${escapeHTML(item.description)}</p>
+
+            <span class="${busy ? "pending" : "available"}">
+                ${busy ? "Currently Borrowed" : "Available"}
+            </span>
+
+            <button class="btn full"
+                ${busy ? "disabled" : ""}
+                onclick="startBorrow('${item.id}')">
+
+                ${busy ? "Unavailable" : "Borrow Now"}
+
+            </button>
+
+        </div>
+    `;
 }
 
-function renderItems(){
-let q=document.getElementById("search").value.toLowerCase();
+// =====================================
+// SEARCH ITEMS
+// =====================================
 
-let filtered=items.filter(i=>
-(i.name+" "+i.id).toLowerCase().includes(q)
-);
+function renderItems() {
 
-document.getElementById("inventory").innerHTML=
-filtered.map(createCard).join("")||"<p>No equipment found.</p>";
+    const search = document.getElementById("search");
+
+    if (!search) return;
+
+    const q = search.value.toLowerCase();
+
+    const filtered = items.filter(item =>
+        (item.name + " " + item.id).toLowerCase().includes(q)
+    );
+
+    document.getElementById("inventory").innerHTML =
+        filtered.map(createCard).join("") ||
+        "<p>No equipment found.</p>";
 }
 
-// AVAILABILITY
+// =====================================
+// MAIN RENDER
+// =====================================
 
-function render(){
-let available=items.filter(i=>!isBorrowed(i.id)).length;
+function render() {
 
-document.getElementById("availableCount").textContent=available;
-document.getElementById("loanCount").textContent=requests.filter(r=>r.status!=="Returned").length;
-document.getElementById("returnedCount").textContent=requests.filter(r=>r.status==="Returned").length;
-document.getElementById("logCount").textContent=logs.length;
+    const available = items.filter(item =>
+        !isBorrowed(item.id)
+    ).length;
 
-document.getElementById("homeItems").innerHTML=
-items.slice(0,3).map(createCard).join("");
+    const active = requests.filter(r =>
+        r.status === "Pending approval" ||
+        r.status === "Approved"
+    ).length;
 
-renderItems();
-renderLogs();
-renderBorrowings();
-renderHistory();
+    const returned = requests.filter(r =>
+        r.status === "Returned"
+    ).length;
+
+    document.getElementById("availableCount").textContent = available;
+    document.getElementById("loanCount").textContent = active;
+    document.getElementById("returnedCount").textContent = returned;
+    document.getElementById("logCount").textContent = logs.length;
+
+    document.getElementById("homeItems").innerHTML =
+        items.slice(0, 3).map(createCard).join("");
+
+    renderItems();
+    renderLogs();
+    renderBorrowings();
+    renderHistory();
+    renderAdmin();
 }
 
+// =====================================
 // SAVE LOGBOOK ENTRY
+// =====================================
 
-document.getElementById("logForm").addEventListener("submit",function(e){
-e.preventDefault();
+document.getElementById("logForm").addEventListener("submit", function(e) {
 
-let name=document.getElementById("logName").value.trim();
-let studentId=document.getElementById("logId").value.trim();
-let section=document.getElementById("logSection").value.trim();
-let equipment=document.getElementById("logEquipment").value;
-let purpose=document.getElementById("logPurpose").value.trim();
-let returnDate=document.getElementById("logReturn").value;
+    e.preventDefault();
 
-let today=new Date();
-today.setHours(0,0,0,0);
-let selectedDate=new Date(returnDate+"T00:00:00");
+    const name = document.getElementById("logName").value.trim();
+    const studentId = document.getElementById("logId").value.trim();
+    const section = document.getElementById("logSection").value.trim();
+    const equipment = document.getElementById("logEquipment").value;
+    const purpose = document.getElementById("logPurpose").value.trim();
+    const returnDate = document.getElementById("logReturn").value;
 
-if(selectedDate<today){
-alert("Please select a valid return date.");
-return;
-}
+    if (returnDate < localDate()) {
+        alert("Please select a valid return date.");
+        return;
+    }
 
-let item=items.find(i=>i.name===equipment);
+    const item = items.find(i => i.name === equipment);
 
-if(!item){
-alert("Please select valid equipment.");
-return;
-}
+    if (!item) {
+        alert("Please select valid equipment.");
+        return;
+    }
 
-if(isBorrowed(item.id)){
-alert("This equipment is currently borrowed.");
-return;
-}
+    if (isBorrowed(item.id)) {
+        alert("This equipment is currently borrowed or awaiting approval.");
+        return;
+    }
 
-let log={
-id:"LOG-"+Date.now(),
-student:name,
-studentId:studentId,
-section:section,
-itemId:item.id,
-equipment:item.name,
-purpose:purpose,
-returnDate:returnDate,
-date:timestamp(),
-status:"Completed - Awaiting Request"
-};
+    const log = {
+        id: "LOG-" + Date.now(),
+        student: name,
+        studentId: studentId,
+        section: section,
+        itemId: item.id,
+        equipment: item.name,
+        purpose: purpose,
+        returnDate: returnDate,
+        date: timestamp(),
+        status: "Completed - Awaiting Request"
+    };
 
-logs.push(log);
-selectedLog=log.id;
+    logs.push(log);
 
-saveData();
-this.reset();
-render();
+    saveData();
 
-alert("Logbook completed! You may now submit your borrowing request.");
-showSection("browse",document.querySelectorAll("nav button")[1]);
+    this.reset();
+
+    render();
+
+    alert("Logbook completed! You may now submit your borrowing request.");
+
+    goTo("browse", 1);
 });
 
+// =====================================
 // START BORROWING
+// =====================================
 
-function startBorrow(id){
+function startBorrow(id) {
 
-selectedItem=items.find(i=>i.id===id);
+    selectedItem = items.find(i => i.id === id);
 
-// REQUIRE COMPLETED LOGBOOK
+    if (!selectedItem || isBorrowed(id)) {
+        alert("This equipment is unavailable.");
+        return;
+    }
 
-let validLog=logs.find(l=>
-l.itemId===id &&
-l.status==="Completed - Awaiting Request"
-);
+    const validLog = logs.find(l =>
+        l.itemId === id &&
+        l.status === "Completed - Awaiting Request"
+    );
 
-if(!validLog){
-alert("Please complete your Digital Logbook for this equipment before borrowing.");
-showSection("logbook",document.querySelectorAll("nav button")[2]);
-return;
+    if (!validLog) {
+
+        alert("Please complete your Digital Logbook for this equipment before borrowing.");
+
+        goTo("logbook", 2);
+
+        return;
+    }
+
+    const confirmRequest = confirm(
+        "Logbook verified!\n\n" +
+        "Equipment: " + selectedItem.name +
+        "\nStudent: " + validLog.student +
+        "\n\nProceed with borrowing request?"
+    );
+
+    if (!confirmRequest) return;
+
+    const request = {
+        id: "REQ-" + Date.now(),
+        itemId: selectedItem.id,
+        name: selectedItem.name,
+        icon: selectedItem.icon,
+        student: validLog.student,
+        studentId: validLog.studentId,
+        logId: validLog.id,
+        purpose: validLog.purpose,
+        date: timestamp(),
+        returnDate: validLog.returnDate,
+        status: "Pending approval",
+        returnTime: null
+    };
+
+    requests.push(request);
+
+    validLog.status = "Pending approval";
+
+    transactions.push({
+        requestId: request.id,
+        action: "Borrowing request submitted",
+        item: request.name,
+        student: request.student,
+        time: timestamp()
+    });
+
+    saveData();
+    render();
+
+    alert("Borrowing request submitted successfully! Please wait for administrator approval.");
+
+    goTo("borrowings", 3);
 }
 
-selectedLog=validLog.id;
+// =====================================
+// DISPLAY LOGBOOK
+// =====================================
 
-let confirmRequest=confirm(
-"Logbook verified!\n\nEquipment: "+selectedItem.name+
-"\nStudent: "+validLog.student+
-"\n\nProceed with borrowing request?"
-);
+function renderLogs() {
 
-if(!confirmRequest)return;
+    const container = document.getElementById("myLogbook");
 
-let request={
-id:"REQ-"+Date.now(),
-itemId:selectedItem.id,
-name:selectedItem.name,
-icon:selectedItem.icon,
-student:validLog.student,
-studentId:validLog.studentId,
-logId:validLog.id,
-purpose:validLog.purpose,
-date:validLog.date,
-returnDate:validLog.returnDate,
-status:"Pending approval",
-returnTime:null
-};
+    if (!logs.length) {
+        container.innerHTML = `
+            <div class="panel small">
+                No logbook records yet. Complete the form above before borrowing.
+            </div>
+        `;
+        return;
+    }
 
-requests.push(request);
+    container.innerHTML = logs.slice().reverse().map(l => `
 
-validLog.status="Pending approval";
-selectedLog=null;
+        <div class="panel log-entry">
 
-transactions.push({
-requestId:request.id,
-action:"Borrowing request submitted",
-item:request.name,
-student:request.student,
-time:timestamp()
-});
+            <h3>📖 ${escapeHTML(l.equipment)}</h3>
 
-saveData();
-render();
+            <p class="small">Logbook No.: ${escapeHTML(l.id)}</p>
 
-alert("Borrowing request submitted successfully!");
-showSection("borrowings",document.querySelectorAll("nav button")[3]);
+            <p class="small">Student: ${escapeHTML(l.student)}</p>
+
+            <p class="small">Student ID: ${escapeHTML(l.studentId)}</p>
+
+            <p class="small">Course/Section: ${escapeHTML(l.section)}</p>
+
+            <p class="small">Purpose: ${escapeHTML(l.purpose)}</p>
+
+            <p class="small">Logged: ${escapeHTML(l.date)}</p>
+
+            <p class="small">Expected Return: ${escapeHTML(l.returnDate)}</p>
+
+            <span class="${
+                l.status === "Returned" ? "returned" :
+                l.status === "Completed - Awaiting Request" ? "available" :
+                l.status === "Rejected" ? "rejected" : "pending"
+            }">
+                ${escapeHTML(l.status)}
+            </span>
+
+        </div>
+
+    `).join("");
 }
 
-// LOGBOOK DISPLAY
+// =====================================
+// MY BORROWINGS
+// =====================================
 
-function renderLogs(){
+function renderBorrowings() {
 
-let container=document.getElementById("myLogbook");
+    const container = document.getElementById("loanList");
 
-if(!logs.length){
-container.innerHTML='<div class="panel small">No logbook records yet. Complete the form above before borrowing.</div>';
-return;
+    const active = requests.filter(r =>
+        r.status === "Pending approval" ||
+        r.status === "Approved"
+    );
+
+    if (!active.length) {
+        container.innerHTML = `
+            <div class="panel small">
+                No active borrowing requests. Complete your logbook before borrowing.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = active.map(r => `
+
+        <div class="loan-card">
+
+            <h3>${r.icon} ${escapeHTML(r.name)}</h3>
+
+            <p>Request No.: ${escapeHTML(r.id)}</p>
+
+            <p>Student: ${escapeHTML(r.student)}</p>
+
+            <p>Return Date: ${escapeHTML(r.returnDate)}</p>
+
+            <p>Purpose: ${escapeHTML(r.purpose)}</p>
+
+            <span class="${r.status === "Approved" ? "approved" : "pending"}">
+                ${escapeHTML(r.status)}
+            </span>
+
+            ${
+                r.status === "Pending approval"
+                ? `<p class="small">Waiting for administrator approval.</p>`
+                : `
+                    <p class="small">
+                        Your borrowing request has been approved.
+                    </p>
+
+                    <button class="btn green full"
+                        onclick="returnItem('${r.id}')">
+                        Record Equipment Return
+                    </button>
+                `
+            }
+
+        </div>
+
+    `).join("");
 }
 
-container.innerHTML=logs.slice().reverse().map(l=>`
-<div class="panel log-entry">
-<h3>📖 ${l.equipment}</h3>
-<p class="small">Logbook No.: ${l.id}</p>
-<p class="small">Student: ${escapeHTML(l.student)}</p>
-<p class="small">Student ID: ${escapeHTML(l.studentId)}</p>
-<p class="small">Course/Section: ${escapeHTML(l.section)}</p>
-<p class="small">Purpose: ${escapeHTML(l.purpose)}</p>
-<p class="small">Logged: ${l.date}</p>
-<p class="small">Expected Return: ${l.returnDate}</p>
-<span class="${l.status==='Returned'?'returned':l.status==='Completed - Awaiting Request'?'available':'pending'}">${l.status}</span>
-</div>
-`).join("");
+// =====================================
+// ADMIN DASHBOARD
+// =====================================
+
+function renderAdmin() {
+
+    const container = document.getElementById("adminList");
+
+    const pendingRequests = requests.filter(r =>
+        r.status === "Pending approval"
+    );
+
+    if (!pendingRequests.length) {
+
+        container.innerHTML = `
+            <div class="panel small">
+                No pending borrowing requests.
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML = pendingRequests.map(r => `
+
+        <div class="loan-card">
+
+            <h3>${r.icon} ${escapeHTML(r.name)}</h3>
+
+            <p>Request No.: ${escapeHTML(r.id)}</p>
+
+            <p>Student: ${escapeHTML(r.student)}</p>
+
+            <p>Student ID: ${escapeHTML(r.studentId)}</p>
+
+            <p>Purpose: ${escapeHTML(r.purpose)}</p>
+
+            <p>Return Date: ${escapeHTML(r.returnDate)}</p>
+
+            <span class="pending">Pending approval</span>
+
+            <button class="btn green full"
+                onclick="approveRequest('${r.id}')">
+                Approve Request
+            </button>
+
+            <button class="btn red full"
+                onclick="rejectRequest('${r.id}')">
+                Reject Request
+            </button>
+
+        </div>
+
+    `).join("");
 }
 
-// BORROWING LIST
+// =====================================
+// APPROVE REQUEST
+// =====================================
 
-function renderBorrowings(){
+function approveRequest(id) {
 
-let container=document.getElementById("loanList");
-let active=requests.filter(r=>r.status!=="Returned");
+    const request = requests.find(r => r.id === id);
 
-if(!active.length){
-container.innerHTML='<div class="panel small">No active borrowing requests. Complete your logbook before borrowing.</div>';
-return;
+    if (!request || request.status !== "Pending approval") {
+        return;
+    }
+
+    if (!confirm("Approve this borrowing request?")) {
+        return;
+    }
+
+    request.status = "Approved";
+
+    transactions.push({
+        requestId: request.id,
+        action: "Borrowing request approved",
+        item: request.name,
+        student: request.student,
+        time: timestamp()
+    });
+
+    saveData();
+    render();
+
+    alert("Borrowing request approved successfully!");
 }
 
-container.innerHTML=active.map(r=>`
-<div class="loan-card">
-<h3>${r.icon} ${r.name}</h3>
-<p>Request No.: ${r.id}</p>
-<p>Student: ${escapeHTML(r.student)}</p>
-<p>Return Date: ${r.returnDate}</p>
-<p>Purpose: ${escapeHTML(r.purpose)}</p>
-<span class="pending">${r.status}</span>
-${r.status==="Pending approval"?'<p class="small">Waiting for administrator approval in this prototype.</p>':''}
-<button class="btn green full" onclick="returnItem('${r.id}')">Record Equipment Return</button>
-</div>
-`).join("");
+// =====================================
+// REJECT REQUEST
+// =====================================
+
+function rejectRequest(id) {
+
+    const request = requests.find(r => r.id === id);
+
+    if (!request || request.status !== "Pending approval") {
+        return;
+    }
+
+    if (!confirm("Are you sure you want to reject this request?")) {
+        return;
+    }
+
+    request.status = "Rejected";
+
+    const log = logs.find(l => l.id === request.logId);
+
+    if (log) {
+        log.status = "Rejected";
+    }
+
+    transactions.push({
+        requestId: request.id,
+        action: "Borrowing request rejected",
+        item: request.name,
+        student: request.student,
+        time: timestamp()
+    });
+
+    saveData();
+    render();
+
+    alert("Borrowing request rejected.");
 }
 
+// =====================================
 // RETURN EQUIPMENT
+// =====================================
 
-function returnItem(id){
+function returnItem(id) {
 
-let r=requests.find(x=>x.id===id);
+    const r = requests.find(x => x.id === id);
 
-if(!r||r.status==="Returned")return;
+    if (!r || r.status !== "Approved") {
+        alert("Only approved borrowing requests can be returned.");
+        return;
+    }
 
-if(!confirm("Confirm that "+r.name+" has been returned?"))return;
+    if (!confirm("Confirm that " + r.name + " has been returned?")) {
+        return;
+    }
 
-r.status="Returned";
-r.returnTime=timestamp();
+    r.status = "Returned";
+    r.returnTime = timestamp();
 
-let log=logs.find(l=>l.id===r.logId);
-if(log)log.status="Returned";
+    const log = logs.find(l => l.id === r.logId);
 
-transactions.push({
-requestId:r.id,
-action:"Equipment returned",
-item:r.name,
-student:r.student,
-time:r.returnTime
-});
+    if (log) {
+        log.status = "Returned";
+    }
 
-saveData();
-render();
+    transactions.push({
+        requestId: r.id,
+        action: "Equipment returned",
+        item: r.name,
+        student: r.student,
+        time: r.returnTime
+    });
 
-alert("Return transaction successfully recorded in the logbook!");
+    saveData();
+    render();
+
+    alert("Return transaction successfully recorded in the logbook!");
 }
 
-// HISTORY
+// =====================================
+// TRANSACTION HISTORY
+// =====================================
 
-function renderHistory(){
+function renderHistory() {
 
-let container=document.getElementById("historyList");
+    const container = document.getElementById("historyList");
 
-if(!transactions.length){
-container.innerHTML='<div class="panel small">No transaction history available.</div>';
-return;
+    if (!transactions.length) {
+
+        container.innerHTML = `
+            <div class="panel small">
+                No transaction history available.
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML = transactions.slice().reverse().map(t => `
+
+        <div class="panel">
+
+            <h3>📋 ${escapeHTML(t.action)}</h3>
+
+            <p class="small">Equipment: ${escapeHTML(t.item)}</p>
+
+            <p class="small">Student: ${escapeHTML(t.student)}</p>
+
+            <p class="small">Request: ${escapeHTML(t.requestId)}</p>
+
+            <p class="small">Date and Time: ${escapeHTML(t.time)}</p>
+
+        </div>
+
+    `).join("");
 }
 
-container.innerHTML=transactions.slice().reverse().map(t=>`
-<div class="panel">
-<h3>📋 ${t.action}</h3>
-<p class="small">Equipment: ${t.item}</p>
-<p class="small">Student: ${escapeHTML(t.student)}</p>
-<p class="small">Request: ${t.requestId}</p>
-<p class="small">Date and Time: ${t.time}</p>
-</div>
-`).join("");
-}
-
+// =====================================
 // STUDENT PROFILE
+// =====================================
 
-function saveProfile(){
+function saveProfile() {
 
-let profile={
-name:document.getElementById("studentName").value.trim(),
-id:document.getElementById("studentId").value.trim(),
-section:document.getElementById("studentSection").value.trim(),
-email:document.getElementById("studentEmail").value.trim()
-};
+    const profile = {
+        name: document.getElementById("studentName").value.trim(),
+        id: document.getElementById("studentId").value.trim(),
+        section: document.getElementById("studentSection").value.trim(),
+        email: document.getElementById("studentEmail").value.trim()
+    };
 
-if(!profile.name||!profile.id){
-alert("Please enter your name and student ID.");
-return;
+    if (!profile.name || !profile.id) {
+        alert("Please enter your name and student ID.");
+        return;
+    }
+
+    localStorage.setItem("bbProfile", JSON.stringify(profile));
+
+    document.getElementById("profileMessage").textContent =
+        "Profile saved successfully!";
+
+    document.getElementById("logName").value = profile.name;
+    document.getElementById("logId").value = profile.id;
+    document.getElementById("logSection").value = profile.section;
+
+    alert("Student profile saved successfully!");
 }
 
-localStorage.setItem("bbProfile",JSON.stringify(profile));
-
-document.getElementById("profileMessage").textContent="Profile saved successfully!";
-
-document.getElementById("logName").value=profile.name;
-document.getElementById("logId").value=profile.id;
-document.getElementById("logSection").value=profile.section;
-
-}
-
+// =====================================
 // LOAD PROFILE
+// =====================================
 
-function loadProfile(){
+function loadProfile() {
 
-let p=JSON.parse(localStorage.getItem("bbProfile")||"null");
+    const p = readStorage("bbProfile", null);
 
-if(!p)return;
+    if (!p) return;
 
-document.getElementById("studentName").value=p.name||"";
-document.getElementById("studentId").value=p.id||"";
-document.getElementById("studentSection").value=p.section||"";
-document.getElementById("studentEmail").value=p.email||"";
+    document.getElementById("studentName").value = p.name || "";
+    document.getElementById("studentId").value = p.id || "";
+    document.getElementById("studentSection").value = p.section || "";
+    document.getElementById("studentEmail").value = p.email || "";
 
-document.getElementById("logName").value=p.name||"";
-document.getElementById("logId").value=p.id||"";
-document.getElementById("logSection").value=p.section||"";
+    document.getElementById("logName").value = p.name || "";
+    document.getElementById("logId").value = p.id || "";
+    document.getElementById("logSection").value = p.section || "";
 }
 
-// BASIC TEXT ESCAPING
+// =====================================
+// INITIALIZE APPLICATION
+// =====================================
 
-function escapeHTML(value){
-return String(value??"").replace(/[&<>"']/g,c=>({
-"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-}[c]));
-}
-
-// START APPLICATION
+document.getElementById("logReturn").min = localDate();
 
 loadProfile();
 render();
 
 </script>
+
 </body>
 </html>
