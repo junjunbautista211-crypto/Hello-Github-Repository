@@ -1,55 +1,84 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BorrowBuddy - Student</title>
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f3f6fb;color:#243047}
-header{background:#173b68;color:white;padding:20px}
-header h2{margin:0}
-main{max-width:1000px;margin:25px auto;padding:15px}
-.card{background:white;padding:20px;margin-bottom:18px;border-radius:12px;box-shadow:0 2px 9px #0001}
-input,button{padding:11px;margin:5px 0;border-radius:6px;border:1px solid #ccc}
-input{width:100%}
-button{background:#1769aa;color:white;border:0;cursor:pointer}
-button:disabled{opacity:.5;cursor:not-allowed}
-.logout{background:#b83232}
-.item{border:1px solid #ddd;padding:14px;margin:10px 0;border-radius:8px}
-.status{font-weight:bold}
+body{margin:0;font-family:Arial,sans-serif;background:#f2f5fa;color:#26344a}
+header{background:#173b68;color:white;padding:18px 25px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+header h1{margin:0;font-size:23px}
+main{max-width:1000px;margin:25px auto;padding:0 15px}
+.card{background:white;padding:22px;border-radius:12px;margin-bottom:18px;box-shadow:0 3px 12px #0000000d}
+h2{margin-top:0;color:#173b68}
+input,button{font:inherit;padding:11px;border-radius:7px}
+input{width:100%;border:1px solid #ccd4df;margin:6px 0 12px}
+button{border:0;background:#1765a8;color:white;cursor:pointer;margin:4px}
+button:hover{opacity:.9}
+button.secondary{background:#64748b}
+button.danger{background:#bd3545}
 .hidden{display:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.item{border:1px solid #dce3ed;padding:15px;border-radius:10px}
+.item h3{margin-top:0}
+.status{font-weight:bold;text-transform:capitalize}
+small{color:#64748b}
+#message{padding:10px;border-radius:7px;margin-bottom:12px}
+@media(max-width:600px){header{display:block}header button{margin-top:10px}}
 </style>
 </head>
+
 <body>
 
 <header>
-  <h2>📚 BorrowBuddy</h2>
-  <p>Student Equipment Borrowing System</p>
+  <h1>📚 BorrowBuddy</h1>
+  <div>
+    <span id="welcome"></span>
+    <button id="logoutBtn" class="secondary hidden">Logout</button>
+  </div>
 </header>
 
 <main>
+
+  <div id="message" class="hidden"></div>
+
+  <!-- LOGIN AND REGISTRATION -->
   <section id="authSection" class="card">
-    <h2>Student Login / Register</h2>
-    <input id="name" placeholder="Full name (for registration)">
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button id="registerBtn">Register as Student</button>
-    <button id="loginBtn">Login</button>
-    <p id="authMessage"></p>
+    <h2>Student Account</h2>
+
+    <div id="loginForm">
+      <h3>Login</h3>
+      <input id="loginEmail" type="email" placeholder="Email address">
+      <input id="loginPassword" type="password" placeholder="Password">
+      <button id="loginBtn">Login</button>
+      <p>Don't have an account?
+        <button class="secondary" id="showRegisterBtn">Register</button>
+      </p>
+    </div>
+
+    <div id="registerForm" class="hidden">
+      <h3>Create Student Account</h3>
+      <input id="regName" placeholder="Full name">
+      <input id="regEmail" type="email" placeholder="Email address">
+      <input id="regPassword" type="password" placeholder="Password (at least 6 characters)">
+      <button id="registerBtn">Register</button>
+      <button class="secondary" id="showLoginBtn">Back to Login</button>
+    </div>
   </section>
 
+  <!-- STUDENT DASHBOARD -->
   <section id="dashboard" class="hidden">
+
     <div class="card">
-      <h2>Welcome, <span id="studentName">Student</span>!</h2>
-      <p>Manage your equipment borrowing requests here.</p>
-      <button id="logoutBtn" class="logout">Logout</button>
+      <h2>Student Dashboard</h2>
+      <p>Welcome to BorrowBuddy. Browse available equipment and submit your borrowing request.</p>
     </div>
 
     <div class="card">
       <h2>Available Equipment</h2>
-      <div id="equipmentList">Loading equipment...</div>
+      <div id="equipmentList" class="grid">Loading equipment...</div>
     </div>
 
     <div class="card">
@@ -58,11 +87,13 @@ button:disabled{opacity:.5;cursor:not-allowed}
     </div>
 
     <div class="card">
-      <h2>My Logbook</h2>
-      <p>Record your borrowing activity before submitting a request.</p>
+      <h2>My Digital Logbook</h2>
+      <p><small>Your borrowing activities are recorded here.</small></p>
       <div id="myLogbook">Loading logbook...</div>
     </div>
+
   </section>
+
 </main>
 
 <script type="module">
@@ -71,14 +102,13 @@ import { auth, db } from "./firebase-config.js";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut
+  signOut,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
 import {
-  collection, doc, getDoc, getDocs, addDoc,
-  query, where, serverTimestamp, updateDoc,
-  orderBy
+  collection, doc, getDoc, getDocs, addDoc, setDoc,
+  query, where, serverTimestamp, updateDoc
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
@@ -86,106 +116,127 @@ const $ = id => document.getElementById(id);
 let currentUser = null;
 let currentName = "";
 
-function message(text) {
-  $("authMessage").textContent = text;
+function showMessage(message, error=false) {
+  $("message").textContent = message;
+  $("message").classList.remove("hidden");
+  $("message").style.background = error ? "#ffe1e1" : "#dff5e5";
+  $("message").style.color = error ? "#8b1e1e" : "#176334";
 }
 
-// Register: student role is assigned by the application.
-// Never allow the user to choose their own role.
-$("registerBtn").onclick = async () => {
-  const name = $("name").value.trim();
-  const email = $("email").value.trim();
-  const password = $("password").value;
+function hideMessage() {
+  $("message").classList.add("hidden");
+}
 
-  if (!name || !email || password.length < 6) {
-    return message("Enter your name, email, and a password of at least 6 characters.");
+function showDashboard(show) {
+  $("authSection").classList.toggle("hidden", show);
+  $("dashboard").classList.toggle("hidden", !show);
+  $("logoutBtn").classList.toggle("hidden", !show);
+}
+
+$("showRegisterBtn").onclick = () => {
+  $("loginForm").classList.add("hidden");
+  $("registerForm").classList.remove("hidden");
+  hideMessage();
+};
+
+$("showLoginBtn").onclick = () => {
+  $("registerForm").classList.add("hidden");
+  $("loginForm").classList.remove("hidden");
+  hideMessage();
+};
+
+// STUDENT REGISTRATION
+$("registerBtn").onclick = async () => {
+  const name = $("regName").value.trim();
+  const email = $("regEmail").value.trim();
+  const password = $("regPassword").value;
+
+  if (!name || !email || !password) {
+    showMessage("Please complete all registration fields.", true);
+    return;
+  }
+
+  if (password.length < 6) {
+    showMessage("Password must contain at least 6 characters.", true);
+    return;
   }
 
   try {
     const result = await createUserWithEmailAndPassword(auth, email, password);
 
-    await addDoc(collection(db, "users"), {
-      uid: result.user.uid,
+    // One profile document, using the Firebase Auth UID.
+    await setDoc(doc(db, "users", result.user.uid), {
       name,
       email,
       role: "student",
       createdAt: serverTimestamp()
     });
 
-    // The users collection document is also stored under the UID.
-    await import("https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js")
-      .then(async m => {
-        await m.setDoc(doc(db, "users", result.user.uid), {
-          uid: result.user.uid,
-          name,
-          email,
-          role: "student",
-          createdAt: serverTimestamp()
-        });
-      });
-
-    message("Registration successful!");
+    showMessage("Registration successful. Welcome to BorrowBuddy!");
   } catch (error) {
-    message(error.message);
+    showMessage(error.message, true);
   }
 };
 
+// STUDENT LOGIN
 $("loginBtn").onclick = async () => {
+  const email = $("loginEmail").value.trim();
+  const password = $("loginPassword").value;
+
+  if (!email || !password) {
+    showMessage("Enter your email and password.", true);
+    return;
+  }
+
   try {
-    await signInWithEmailAndPassword(
-      auth,
-      $("email").value.trim(),
-      $("password").value
-    );
+    await signInWithEmailAndPassword(auth, email, password);
   } catch (error) {
-    message(error.message);
+    showMessage(error.message, true);
   }
 };
 
-$("logoutBtn").onclick = () => signOut(auth);
+// LOGOUT
+$("logoutBtn").onclick = async () => {
+  await signOut(auth);
+};
 
+// CHECK LOGIN
 onAuthStateChanged(auth, async user => {
+  currentUser = user;
+
   if (!user) {
-    currentUser = null;
-    $("authSection").classList.remove("hidden");
-    $("dashboard").classList.add("hidden");
+    currentName = "";
+    $("welcome").textContent = "";
+    showDashboard(false);
     return;
   }
 
   try {
     const userSnap = await getDoc(doc(db, "users", user.uid));
 
-    if (!userSnap.exists()) {
+    if (!userSnap.exists() || userSnap.data().role !== "student") {
+      showMessage("This account is not registered as a student.", true);
       await signOut(auth);
-      return message("Student account not found.");
+      return;
     }
 
-    const profile = userSnap.data();
-
-    if (profile.role !== "student") {
-      await signOut(auth);
-      return message("This page is for student accounts only.");
-    }
-
-    currentUser = user;
-    currentName = profile.name || user.email;
-
-    $("studentName").textContent = currentName;
-    $("authSection").classList.add("hidden");
-    $("dashboard").classList.remove("hidden");
+    currentName = userSnap.data().name || user.email;
+    $("welcome").textContent = "Hello, " + currentName;
+    showDashboard(true);
 
     await loadEquipment();
-    await loadRequests();
-    await loadLogbook();
+    await loadMyRequests();
+    await loadMyLogbook();
 
   } catch (error) {
-    message(error.message);
+    showMessage(error.message, true);
   }
 });
 
+// LOAD EQUIPMENT
 async function loadEquipment() {
   const container = $("equipmentList");
-  container.textContent = "Loading...";
+  container.textContent = "Loading equipment...";
 
   try {
     const snapshot = await getDocs(collection(db, "equipment"));
@@ -197,99 +248,108 @@ async function loadEquipment() {
 
     container.innerHTML = "";
 
-    snapshot.forEach(item => {
-      const data = item.data();
-      const available = data.available !== false &&
-                        data.status !== "Borrowed";
+    snapshot.forEach(itemDoc => {
+      const item = itemDoc.data();
+      const available = item.available === true && item.status !== "borrowed";
 
-      const div = document.createElement("div");
-      div.className = "item";
+      const card = document.createElement("div");
+      card.className = "item";
 
-      const title = document.createElement("h3");
-      title.textContent = data.name || "Unnamed equipment";
+      const name = document.createElement("h3");
+      name.textContent = item.name || "Unnamed equipment";
 
       const description = document.createElement("p");
-      description.textContent = data.description || "No description";
+      description.textContent = item.description || "No description available.";
 
       const status = document.createElement("p");
-      status.textContent = available ? "Available" : "Not available";
+      status.innerHTML = "Status: ";
+      const statusText = document.createElement("span");
+      statusText.className = "status";
+      statusText.textContent = available ? "Available" : "Not available";
+      status.appendChild(statusText);
 
-      const button = document.createElement("button");
-      button.textContent = "Borrow Equipment";
-      button.disabled = !available;
-      button.onclick = () => borrowEquipment(item.id, data.name || "Equipment");
+      card.append(name, description, status);
 
-      div.append(title, description, status, button);
-      container.appendChild(div);
+      if (available) {
+        const button = document.createElement("button");
+        button.textContent = "Request to Borrow";
+        button.onclick = () => requestBorrow(itemDoc.id, item.name || "Equipment");
+        card.appendChild(button);
+      }
+
+      container.appendChild(card);
     });
+
   } catch (error) {
-    container.textContent = "Error: " + error.message;
+    container.textContent = error.message;
   }
 }
 
-async function borrowEquipment(equipmentId, equipmentName) {
+// CREATE BORROWING REQUEST
+async function requestBorrow(equipmentId, equipmentName) {
   if (!currentUser) return;
 
   try {
     const equipmentRef = doc(db, "equipment", equipmentId);
     const equipmentSnap = await getDoc(equipmentRef);
 
-    if (!equipmentSnap.exists()) {
-      return alert("Equipment not found.");
+    if (!equipmentSnap.exists() ||
+        equipmentSnap.data().available !== true ||
+        equipmentSnap.data().status === "borrowed") {
+      showMessage("This equipment is no longer available.", true);
+      await loadEquipment();
+      return;
     }
 
-    const equipment = equipmentSnap.data();
-
-    if (equipment.available === false || equipment.status === "Borrowed") {
-      return alert("This equipment is not available.");
-    }
-
-    const requestQuery = query(
+    const existingQuery = query(
       collection(db, "requests"),
-      where("studentId", "==", currentUser.uid),
-      where("equipmentId", "==", equipmentId),
-      where("status", "in", ["Pending", "Approved"])
+      where("studentId", "==", currentUser.uid)
     );
 
-    const existing = await getDocs(requestQuery);
+    const existing = await getDocs(existingQuery);
 
-    if (!existing.empty) {
-      return alert("You already have an active request for this equipment.");
+    const hasActiveRequest = existing.docs.some(d => {
+      const status = d.data().status;
+      return d.data().equipmentId === equipmentId &&
+        ["pending", "approved"].includes(status);
+    });
+
+    if (hasActiveRequest) {
+      showMessage("You already have an active request for this equipment.", true);
+      return;
     }
 
-    // Record the logbook entry first.
     await addDoc(collection(db, "logbooks"), {
       studentId: currentUser.uid,
       studentName: currentName,
       equipmentId,
       equipmentName,
-      action: "Borrowing request submitted",
+      activity: "Borrowing request submitted",
       createdAt: serverTimestamp()
     });
 
-    // Create a pending request. Only an administrator can approve it.
     await addDoc(collection(db, "requests"), {
       studentId: currentUser.uid,
       studentName: currentName,
       equipmentId,
       equipmentName,
-      status: "Pending",
+      status: "pending",
       createdAt: serverTimestamp()
     });
 
-    alert("Request submitted! Please wait for administrator approval.");
-
-    await loadRequests();
-    await loadLogbook();
+    showMessage("Your borrowing request has been submitted.");
+    await loadMyRequests();
+    await loadMyLogbook();
 
   } catch (error) {
-    alert("Request failed: " + error.message);
+    showMessage(error.message, true);
   }
 }
 
-async function loadRequests() {
+// LOAD STUDENT REQUESTS
+async function loadMyRequests() {
   const container = $("myRequests");
-  container.textContent = "Loading...";
+  container.textContent = "Loading requests...";
 
   try {
     const q = query(
@@ -298,34 +358,43 @@ async function loadRequests() {
     );
 
     const snapshot = await getDocs(q);
-    container.innerHTML = "";
 
     if (snapshot.empty) {
       container.textContent = "You have no borrowing requests.";
       return;
     }
 
-    snapshot.forEach(item => {
-      const data = item.data();
-      const div = document.createElement("div");
-      div.className = "item";
+    container.innerHTML = "";
 
-      const name = document.createElement("strong");
+    snapshot.forEach(requestDoc => {
+      const data = requestDoc.data();
+
+      const card = document.createElement("div");
+      card.className = "item";
+
+      const name = document.createElement("h3");
       name.textContent = data.equipmentName || "Equipment";
 
       const status = document.createElement("p");
-      status.textContent = "Status: " + data.status;
+      status.textContent = "Status: " + (data.status || "unknown");
+      status.className = "status";
 
-      div.append(name, status);
+      card.append(name, status);
 
-      if (data.status === "Approved") {
-        const button = document.createElement("button");
-        button.textContent = "Return Equipment";
-        button.onclick = () => returnEquipment(item.id, data);
-        div.appendChild(button);
+      if (data.status === "approved") {
+        const returnButton = document.createElement("button");
+        returnButton.textContent = "Mark as Returned";
+        returnButton.onclick = () => markReturned(requestDoc.id);
+        card.appendChild(returnButton);
       }
 
-      container.appendChild(div);
+      if (data.status === "returned") {
+        const note = document.createElement("small");
+        note.textContent = "Waiting for admin to confirm the return.";
+        card.appendChild(note);
+      }
+
+      container.appendChild(card);
     });
 
   } catch (error) {
@@ -333,46 +402,35 @@ async function loadRequests() {
   }
 }
 
-async function returnEquipment(requestId, data) {
-  if (!confirm("Are you sure you want to return this equipment?")) return;
-
+// STUDENT MARKS ITEM AS RETURNED
+async function markReturned(requestId) {
   try {
-    const requestRef = doc(db, "requests", requestId);
-    const requestSnap = await getDoc(requestRef);
-
-    if (!requestSnap.exists() ||
-        requestSnap.data().studentId !== currentUser.uid ||
-        requestSnap.data().status !== "Approved") {
-      return alert("This request cannot be returned.");
-    }
-
-    await updateDoc(requestRef, {
-      status: "Returned",
+    await updateDoc(doc(db, "requests", requestId), {
+      status: "returned",
       returnedAt: serverTimestamp()
     });
 
     await addDoc(collection(db, "logbooks"), {
       studentId: currentUser.uid,
       studentName: currentName,
-      equipmentId: data.equipmentId,
-      equipmentName: data.equipmentName,
-      action: "Equipment returned",
+      activity: "Student marked equipment as returned",
+      requestId,
       createdAt: serverTimestamp()
     });
 
-    alert("Equipment return recorded!");
-    await loadRequests();
-    await loadLogbook();
-    await loadEquipment();
+    showMessage("Return submitted. Please wait for admin confirmation.");
+    await loadMyRequests();
+    await loadMyLogbook();
 
   } catch (error) {
-    alert("Return failed: " + error.message);
+    showMessage(error.message, true);
   }
 }
 
-async function loadLogbook() {
+// LOAD DIGITAL LOGBOOK
+async function loadMyLogbook() {
   const container = $("myLogbook");
-  container.textContent = "Loading...";
+  container.textContent = "Loading logbook...";
 
   try {
     const q = query(
@@ -381,26 +439,21 @@ async function loadLogbook() {
     );
 
     const snapshot = await getDocs(q);
-    container.innerHTML = "";
 
     if (snapshot.empty) {
-      container.textContent = "No logbook records yet.";
+      container.textContent = "No activities recorded yet.";
       return;
     }
 
-    snapshot.forEach(item => {
-      const data = item.data();
-      const div = document.createElement("div");
-      div.className = "item";
+    container.innerHTML = "";
 
-      const action = document.createElement("p");
-      action.textContent = data.action;
-
-      const equipment = document.createElement("p");
-      equipment.textContent = "Equipment: " + data.equipmentName;
-
-      div.append(action, equipment);
-      container.appendChild(div);
+    snapshot.forEach(entry => {
+      const data = entry.data();
+      const line = document.createElement("p");
+      line.textContent =
+        (data.equipmentName ? data.equipmentName + " — " : "") +
+        (data.activity || "Borrowing activity");
+      container.appendChild(line);
     });
 
   } catch (error) {
@@ -408,5 +461,6 @@ async function loadLogbook() {
   }
 }
 </script>
+
 </body>
 </html>
