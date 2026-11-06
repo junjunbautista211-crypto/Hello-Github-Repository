@@ -1,343 +1,497 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BorrowBuddy - Admin</title>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f2f5fa;color:#26344a}
-header{background:#173b68;color:white;padding:22px}
-main{max-width:1100px;margin:25px auto;padding:15px}
-.card{background:white;padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 2px 9px #0001}
-input,button{padding:11px;border-radius:6px;border:1px solid #ccc;margin:5px 0}
-input{width:100%}
-button{background:#1769aa;color:white;border:0;cursor:pointer}
-button:disabled{opacity:.5}
-.approve{background:#218838}
-.reject{background:#c0392b}
-.logout{background:#555}
-.item{padding:15px;border:1px solid #ddd;border-radius:8px;margin:12px 0}
-.status{font-weight:bold}
+header{background:#173b68;color:white;padding:18px 25px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+header h1{margin:0;font-size:23px}
+main{max-width:1100px;margin:25px auto;padding:0 15px}
+.card{background:white;padding:22px;border-radius:12px;margin-bottom:18px;box-shadow:0 3px 12px #0000000d}
+h2{margin-top:0;color:#173b68}
+input,textarea,button{font:inherit;padding:11px;border-radius:7px}
+input,textarea{width:100%;border:1px solid #ccd4df;margin:6px 0 12px}
+textarea{min-height:75px}
+button{border:0;background:#1765a8;color:white;cursor:pointer;margin:4px}
+button:hover{opacity:.9}
+button.secondary{background:#64748b}
+button.danger{background:#bd3545}
+button.success{background:#198754}
 .hidden{display:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.item{border:1px solid #dce3ed;padding:15px;border-radius:10px}
+.item h3{margin-top:0}
+.status{text-transform:capitalize;font-weight:bold}
+#message{padding:10px;border-radius:7px;margin-bottom:12px}
+small{color:#64748b}
 </style>
 </head>
+
 <body>
 
 <header>
-<h2>BorrowBuddy Administrator</h2>
-<p>Equipment and Student Request Management</p>
+  <h1>📚 BorrowBuddy Admin</h1>
+  <div>
+    <span id="adminWelcome"></span>
+    <button id="logoutBtn" class="secondary hidden">Logout</button>
+  </div>
 </header>
 
 <main>
 
-<section id="loginSection" class="card">
-<h2>Administrator Login</h2>
-<input type="email" id="email" placeholder="Admin email">
-<input type="password" id="password" placeholder="Password">
-<button id="loginBtn">Login as Admin</button>
-<p id="message"></p>
-</section>
+  <div id="message" class="hidden"></div>
 
-<section id="adminDashboard" class="hidden">
+  <!-- ADMIN LOGIN -->
+  <section id="loginSection" class="card">
+    <h2>Administrator Login</h2>
+    <p>Only authorized administrator accounts can access this page.</p>
+    <input id="adminEmail" type="email" placeholder="Admin email">
+    <input id="adminPassword" type="password" placeholder="Password">
+    <button id="loginBtn">Login as Admin</button>
+  </section>
 
-<div class="card">
-<h2>Welcome, Administrator</h2>
-<p>Manage student borrowing requests and equipment.</p>
-<button id="refreshBtn">Refresh Requests</button>
-<button id="logoutBtn" class="logout">Logout</button>
-</div>
+  <!-- ADMIN DASHBOARD -->
+  <section id="adminDashboard" class="hidden">
 
-<div class="card">
-<h2>Pending Borrowing Requests</h2>
-<div id="pendingRequests">Loading requests...</div>
-</div>
+    <div class="card">
+      <h2>Administrator Dashboard</h2>
+      <p>Manage student borrowing requests and equipment records.</p>
+    </div>
 
-<div class="card">
-<h2>All Borrowing Records</h2>
-<div id="allRequests">Loading records...</div>
-</div>
+    <div class="card">
+      <h2>Pending Borrowing Requests</h2>
+      <div id="pendingRequests" class="grid">Loading requests...</div>
+    </div>
 
-<div class="card">
-<h2>Equipment Management</h2>
-<div id="equipmentList">Loading equipment...</div>
-</div>
+    <div class="card">
+      <h2>Returned Equipment</h2>
+      <p><small>Confirm the physical return before making equipment available again.</small></p>
+      <div id="returnedRequests" class="grid">Loading returned requests...</div>
+    </div>
 
-</section>
+    <div class="card">
+      <h2>All Borrowing Records</h2>
+      <div id="allRequests" class="grid">Loading records...</div>
+    </div>
+
+    <div class="card">
+      <h2>Add Equipment</h2>
+      <input id="equipmentName" placeholder="Equipment name">
+      <textarea id="equipmentDescription" placeholder="Equipment description"></textarea>
+      <button id="addEquipmentBtn">Add Equipment</button>
+    </div>
+
+    <div class="card">
+      <h2>Equipment Inventory</h2>
+      <div id="equipmentList" class="grid">Loading equipment...</div>
+    </div>
+
+  </section>
+
 </main>
 
 <script type="module">
 import { auth, db } from "./firebase-config.js";
 
 import {
-signInWithEmailAndPassword,
-onAuthStateChanged,
-signOut
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
 import {
-collection, doc, getDoc, getDocs,
-query, where, updateDoc, serverTimestamp
+  collection, doc, getDoc, getDocs, addDoc,
+  updateDoc, serverTimestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
+
 let adminUser = null;
 
+function showMessage(message, error=false) {
+  $("message").textContent = message;
+  $("message").classList.remove("hidden");
+  $("message").style.background = error ? "#ffe1e1" : "#dff5e5";
+  $("message").style.color = error ? "#8b1e1e" : "#176334";
+}
+
+function showDashboard(show) {
+  $("loginSection").classList.toggle("hidden", show);
+  $("adminDashboard").classList.toggle("hidden", !show);
+  $("logoutBtn").classList.toggle("hidden", !show);
+}
+
+// ADMIN LOGIN
 $("loginBtn").onclick = async () => {
-try {
-await signInWithEmailAndPassword(
-auth,
-$("email").value.trim(),
-$("password").value
-);
-} catch(error) {
-$("message").textContent = error.message;
-}
+  const email = $("adminEmail").value.trim();
+  const password = $("adminPassword").value;
+
+  if (!email || !password) {
+    showMessage("Enter your admin email and password.", true);
+    return;
+  }
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    showMessage(error.message, true);
+  }
 };
 
-$("logoutBtn").onclick = () => signOut(auth);
-
-$("refreshBtn").onclick = async () => {
-await loadRequests();
-await loadEquipment();
+// LOGOUT
+$("logoutBtn").onclick = async () => {
+  await signOut(auth);
 };
 
+// VERIFY ADMIN ROLE
 onAuthStateChanged(auth, async user => {
-if (!user) {
-adminUser = null;
-$("loginSection").classList.remove("hidden");
-$("adminDashboard").classList.add("hidden");
-return;
-}
+  adminUser = null;
 
-try {
-const userSnap = await getDoc(doc(db,"users",user.uid));
+  if (!user) {
+    $("adminWelcome").textContent = "";
+    showDashboard(false);
+    return;
+  }
 
-if (!userSnap.exists() || userSnap.data().role !== "admin") {
-alert("Access denied. Administrator account required.");
-await signOut(auth);
-return;
-}
+  try {
+    const userSnap = await getDoc(doc(db, "users", user.uid));
 
-adminUser = user;
+    if (!userSnap.exists() || userSnap.data().role !== "admin") {
+      showMessage("Access denied. This account is not an administrator.", true);
+      await signOut(auth);
+      return;
+    }
 
-$("loginSection").classList.add("hidden");
-$("adminDashboard").classList.remove("hidden");
+    adminUser = user;
+    $("adminWelcome").textContent = "Administrator: " + (userSnap.data().name || user.email);
+    showDashboard(true);
 
-await loadRequests();
-await loadEquipment();
+    await loadRequests();
+    await loadEquipment();
 
-} catch(error) {
-$("message").textContent = error.message;
-}
+  } catch (error) {
+    showMessage(error.message, true);
+  }
 });
 
-// Load student requests
+// LOAD ALL REQUESTS
 async function loadRequests() {
-if (!adminUser) return;
+  const pendingBox = $("pendingRequests");
+  const returnedBox = $("returnedRequests");
+  const allBox = $("allRequests");
 
-$("pendingRequests").textContent = "Loading...";
-$("allRequests").textContent = "Loading...";
+  pendingBox.textContent = "Loading...";
+  returnedBox.textContent = "Loading...";
+  allBox.textContent = "Loading...";
 
-try {
-const snapshot = await getDocs(collection(db,"requests"));
+  try {
+    const snapshot = await getDocs(collection(db, "requests"));
 
-$("pendingRequests").innerHTML = "";
-$("allRequests").innerHTML = "";
+    pendingBox.innerHTML = "";
+    returnedBox.innerHTML = "";
+    allBox.innerHTML = "";
 
-if (snapshot.empty) {
-$("pendingRequests").textContent = "No student requests yet.";
-$("allRequests").textContent = "No borrowing records yet.";
-return;
+    if (snapshot.empty) {
+      pendingBox.textContent = "No pending requests.";
+      returnedBox.textContent = "No returned equipment waiting for confirmation.";
+      allBox.textContent = "No borrowing records yet.";
+      return;
+    }
+
+    let pendingCount = 0;
+    let returnedCount = 0;
+
+    snapshot.forEach(requestDoc => {
+      const data = requestDoc.data();
+
+      const card = document.createElement("div");
+      card.className = "item";
+
+      const title = document.createElement("h3");
+      title.textContent = data.equipmentName || "Equipment";
+
+      const student = document.createElement("p");
+      student.textContent = "Student: " + (data.studentName || "Unknown");
+
+      const status = document.createElement("p");
+      status.className = "status";
+      status.textContent = "Status: " + (data.status || "unknown");
+
+      card.append(title, student, status);
+
+      if (data.status === "pending") {
+        pendingCount++;
+
+        const approveBtn = document.createElement("button");
+        approveBtn.className = "success";
+        approveBtn.textContent = "Approve";
+        approveBtn.onclick = () => approveRequest(requestDoc.id);
+
+        const rejectBtn = document.createElement("button");
+        rejectBtn.className = "danger";
+        rejectBtn.textContent = "Reject";
+        rejectBtn.onclick = () => rejectRequest(requestDoc.id);
+
+        card.append(approveBtn, rejectBtn);
+        pendingBox.appendChild(card);
+
+      } else if (data.status === "returned") {
+        returnedCount++;
+
+        const confirmBtn = document.createElement("button");
+        confirmBtn.className = "success";
+        confirmBtn.textContent = "Confirm Return";
+        confirmBtn.onclick = () => confirmReturn(requestDoc.id);
+
+        card.appendChild(confirmBtn);
+        returnedBox.appendChild(card);
+      }
+
+      // A separate display card for all records.
+      const allCard = document.createElement("div");
+      allCard.className = "item";
+
+      const allTitle = document.createElement("h3");
+      allTitle.textContent = data.equipmentName || "Equipment";
+
+      const allStudent = document.createElement("p");
+      allStudent.textContent = "Student: " + (data.studentName || "Unknown");
+
+      const allStatus = document.createElement("p");
+      allStatus.className = "status";
+      allStatus.textContent = "Status: " + (data.status || "unknown");
+
+      allCard.append(allTitle, allStudent, allStatus);
+      allBox.appendChild(allCard);
+    });
+
+    if (pendingCount === 0) {
+      pendingBox.textContent = "No pending requests.";
+    }
+
+    if (returnedCount === 0) {
+      returnedBox.textContent = "No returned equipment waiting for confirmation.";
+    }
+
+  } catch (error) {
+    pendingBox.textContent = error.message;
+    returnedBox.textContent = error.message;
+    allBox.textContent = error.message;
+  }
 }
 
-let pendingCount = 0;
-
-snapshot.forEach(requestDoc => {
-const data = requestDoc.data();
-
-const item = document.createElement("div");
-item.className = "item";
-
-const student = document.createElement("h3");
-student.textContent = "Student: " + (data.studentName || "Unknown");
-
-const equipment = document.createElement("p");
-equipment.textContent = "Equipment: " + (data.equipmentName || "Unknown");
-
-const status = document.createElement("p");
-status.className = "status";
-status.textContent = "Status: " + data.status;
-
-item.append(student,equipment,status);
-
-if (data.status === "Pending") {
-pendingCount++;
-
-const approveBtn = document.createElement("button");
-approveBtn.className = "approve";
-approveBtn.textContent = "Approve";
-
-const rejectBtn = document.createElement("button");
-rejectBtn.className = "reject";
-rejectBtn.textContent = "Reject";
-
-approveBtn.onclick = () => approveRequest(requestDoc.id);
-rejectBtn.onclick = () => rejectRequest(requestDoc.id);
-
-item.append(approveBtn,rejectBtn);
-
-$("pendingRequests").appendChild(item.cloneNode(true));
-
-// Add buttons to the actual pending request card too.
-$("pendingRequests").lastElementChild.querySelectorAll("button")[0]
-.onclick = () => approveRequest(requestDoc.id);
-
-$("pendingRequests").lastElementChild.querySelectorAll("button")[1]
-.onclick = () => rejectRequest(requestDoc.id);
-
-} 
-
-$("allRequests").appendChild(item);
-});
-
-if (pendingCount === 0) {
-$("pendingRequests").textContent = "No pending requests.";
-}
-
-} catch(error) {
-$("pendingRequests").textContent = error.message;
-}
-}
-
-// Approve a borrowing request
+// APPROVE REQUEST
 async function approveRequest(requestId) {
-try {
-const requestRef = doc(db,"requests",requestId);
-const requestSnap = await getDoc(requestRef);
+  try {
+    await runTransaction(db, async transaction => {
+      const requestRef = doc(db, "requests", requestId);
+      const requestSnap = await transaction.get(requestRef);
 
-if (!requestSnap.exists()) return alert("Request not found.");
+      if (!requestSnap.exists()) {
+        throw new Error("Request not found.");
+      }
 
-const request = requestSnap.data();
+      const request = requestSnap.data();
 
-// Prevent an administrator from approving their own request.
-if (request.studentId === adminUser.uid) {
-return alert("You cannot approve your own borrowing request.");
+      if (request.status !== "pending") {
+        throw new Error("This request has already been processed.");
+      }
+
+      const equipmentRef = doc(db, "equipment", request.equipmentId);
+      const equipmentSnap = await transaction.get(equipmentRef);
+
+      if (!equipmentSnap.exists()) {
+        throw new Error("Equipment record not found.");
+      }
+
+      if (equipmentSnap.data().available !== true) {
+        throw new Error("This equipment is not available.");
+      }
+
+      transaction.update(requestRef, {
+        status: "approved",
+        approvedAt: serverTimestamp(),
+        approvedBy: adminUser.uid
+      });
+
+      transaction.update(equipmentRef, {
+        available: false,
+        status: "borrowed"
+      });
+    });
+
+    await addDoc(collection(db, "logbooks"), {
+      activity: "Admin approved a borrowing request",
+      requestId,
+      createdAt: serverTimestamp()
+    });
+
+    showMessage("Request approved successfully.");
+    await loadRequests();
+    await loadEquipment();
+
+  } catch (error) {
+    showMessage(error.message, true);
+  }
 }
 
-if (request.status !== "Pending") {
-return alert("This request has already been processed.");
-}
-
-const equipmentRef = doc(db,"equipment",request.equipmentId);
-const equipmentSnap = await getDoc(equipmentRef);
-
-if (!equipmentSnap.exists()) {
-return alert("Equipment does not exist.");
-}
-
-const equipment = equipmentSnap.data();
-
-if (equipment.available === false || equipment.status === "Borrowed") {
-return alert("This equipment is no longer available.");
-}
-
-if (!confirm("Approve this student's borrowing request?")) return;
-
-await updateDoc(requestRef,{
-status:"Approved",
-approvedBy:adminUser.uid,
-approvedAt:serverTimestamp()
-});
-
-await updateDoc(equipmentRef,{
-available:false,
-status:"Borrowed"
-});
-
-alert("Request approved successfully!");
-
-await loadRequests();
-await loadEquipment();
-
-} catch(error) {
-alert("Approval failed: " + error.message);
-}
-}
-
-// Reject a borrowing request
+// REJECT REQUEST
 async function rejectRequest(requestId) {
-try {
-const requestRef = doc(db,"requests",requestId);
-const requestSnap = await getDoc(requestRef);
+  try {
+    const requestRef = doc(db, "requests", requestId);
+    const requestSnap = await getDoc(requestRef);
 
-if (!requestSnap.exists()) return alert("Request not found.");
+    if (!requestSnap.exists() || requestSnap.data().status !== "pending") {
+      showMessage("This request is no longer pending.", true);
+      return;
+    }
 
-const request = requestSnap.data();
+    await updateDoc(requestRef, {
+      status: "rejected",
+      rejectedAt: serverTimestamp(),
+      rejectedBy: adminUser.uid
+    });
 
-if (request.studentId === adminUser.uid) {
-return alert("You cannot process your own borrowing request.");
+    await addDoc(collection(db, "logbooks"), {
+      activity: "Admin rejected a borrowing request",
+      requestId,
+      createdAt: serverTimestamp()
+    });
+
+    showMessage("Request rejected.");
+    await loadRequests();
+
+  } catch (error) {
+    showMessage(error.message, true);
+  }
 }
 
-if (request.status !== "Pending") {
-return alert("This request has already been processed.");
+// ADMIN CONFIRMS RETURN
+async function confirmReturn(requestId) {
+  try {
+    await runTransaction(db, async transaction => {
+      const requestRef = doc(db, "requests", requestId);
+      const requestSnap = await transaction.get(requestRef);
+
+      if (!requestSnap.exists()) {
+        throw new Error("Request not found.");
+      }
+
+      const request = requestSnap.data();
+
+      if (request.status !== "returned") {
+        throw new Error("The student has not marked this item as returned.");
+      }
+
+      const equipmentRef = doc(db, "equipment", request.equipmentId);
+      const equipmentSnap = await transaction.get(equipmentRef);
+
+      if (!equipmentSnap.exists()) {
+        throw new Error("Equipment record not found.");
+      }
+
+      transaction.update(equipmentRef, {
+        available: true,
+        status: "available"
+      });
+
+      transaction.update(requestRef, {
+        returnConfirmed: true,
+        returnConfirmedAt: serverTimestamp(),
+        returnConfirmedBy: adminUser.uid
+      });
+    });
+
+    await addDoc(collection(db, "logbooks"), {
+      activity: "Admin confirmed equipment return",
+      requestId,
+      createdAt: serverTimestamp()
+    });
+
+    showMessage("Return confirmed. Equipment is now available.");
+    await loadRequests();
+    await loadEquipment();
+
+  } catch (error) {
+    showMessage(error.message, true);
+  }
 }
 
-if (!confirm("Reject this borrowing request?")) return;
+// ADD EQUIPMENT
+$("addEquipmentBtn").onclick = async () => {
+  const name = $("equipmentName").value.trim();
+  const description = $("equipmentDescription").value.trim();
 
-await updateDoc(requestRef,{
-status:"Rejected",
-rejectedBy:adminUser.uid,
-rejectedAt:serverTimestamp()
-});
+  if (!name) {
+    showMessage("Enter an equipment name.", true);
+    return;
+  }
 
-alert("Request rejected.");
+  try {
+    await addDoc(collection(db, "equipment"), {
+      name,
+      description,
+      available: true,
+      status: "available",
+      createdAt: serverTimestamp(),
+      createdBy: adminUser.uid
+    });
 
-await loadRequests();
+    $("equipmentName").value = "";
+    $("equipmentDescription").value = "";
 
-} catch(error) {
-alert("Rejection failed: " + error.message);
-}
-}
+    showMessage("Equipment added successfully.");
+    await loadEquipment();
 
-// Display equipment
+  } catch (error) {
+    showMessage(error.message, true);
+  }
+};
+
+// LOAD EQUIPMENT INVENTORY
 async function loadEquipment() {
-if (!adminUser) return;
+  const container = $("equipmentList");
+  container.textContent = "Loading equipment...";
 
-const container = $("equipmentList");
-container.textContent = "Loading...";
+  try {
+    const snapshot = await getDocs(collection(db, "equipment"));
 
-try {
-const snapshot = await getDocs(collection(db,"equipment"));
-container.innerHTML = "";
+    if (snapshot.empty) {
+      container.textContent = "No equipment added yet.";
+      return;
+    }
 
-if (snapshot.empty) {
-container.textContent = "No equipment added yet.";
-return;
-}
+    container.innerHTML = "";
 
-snapshot.forEach(item => {
-const data = item.data();
-const div = document.createElement("div");
-div.className = "item";
+    snapshot.forEach(itemDoc => {
+      const item = itemDoc.data();
 
-const name = document.createElement("strong");
-name.textContent = data.name || "Unnamed equipment";
+      const card = document.createElement("div");
+      card.className = "item";
 
-const status = document.createElement("p");
-status.textContent = "Status: " +
-(data.available === false || data.status === "Borrowed"
-? "Borrowed" : "Available");
+      const title = document.createElement("h3");
+      title.textContent = item.name || "Unnamed equipment";
 
-div.append(name,status);
-container.appendChild(div);
-});
+      const description = document.createElement("p");
+      description.textContent = item.description || "No description";
 
-} catch(error) {
-container.textContent = error.message;
-}
+      const status = document.createElement("p");
+      status.className = "status";
+      status.textContent = item.available ? "Available" : "Borrowed";
+
+      card.append(title, description, status);
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    container.textContent = error.message;
+  }
 }
 </script>
+
 </body>
 </html>
